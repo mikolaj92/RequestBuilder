@@ -19,7 +19,8 @@ public protocol ServiceRequestProtocol {
     var httpMethod: HTTPMethod { get }
     var headers: HTTPHeaders? { get }
     var httpBody: Data? { get }
-    var parameters: RequestParameters? { get }
+    var body: RequestBody? { get }
+	var urlParameters: [String: String]? { get }
 }
 extension ServiceRequestProtocol {
 	
@@ -36,7 +37,7 @@ extension ServiceRequestProtocol {
     public var headers: HTTPHeaders? { nil }
 
     public var httpBody: Data? {
-        guard let params = parameters else {
+        guard let params = body  else {
             return nil
         }
         switch params {
@@ -44,29 +45,27 @@ extension ServiceRequestProtocol {
             return val.encoded
         case .string(let val):
             return val.data(using: context.stringEncoding)
-        case .urlEncoded:
-            return nil
         }
     }
-
-    public var parameters: RequestParameters? { nil }
+	
+	public var body: RequestBody? { nil }
+	
+	public var urlParameters: [String : String]? { nil }
 
     private var url: URL {
         var components = URLComponents()
         components.scheme = urlScheme
         components.host = urlHost
         components.path = urlPath
-        var items: [URLQueryItem] = []
-        if let params = parameters,
-            case let .urlEncoded(value) = params {
-            for (key, value) in value {
-                items.append(URLQueryItem(name: key, value: value))
-            }
-            components.queryItems = items
-        }
+		components.queryItems = urlParameters
+			.map { $0
+				.map {
+					URLQueryItem(name: $0.key, value: $0.value)
+				}
+			}
         guard let complete = components.url else {
             print(components)
-            fatalError()
+            fatalError("COULD NOT BUILD URL")
         }
         return complete
     }

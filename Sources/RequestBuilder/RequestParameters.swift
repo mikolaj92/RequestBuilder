@@ -8,8 +8,7 @@
 
 import Foundation
 
-public enum RequestParameters {
+public enum RequestBody {
     case json(Encodable)
-    case urlEncoded([String: String])
     case string(String)
 }

@@ -7,18 +7,28 @@ final class RequestBuilderTests: XCTestCase {
         static let userId = 1
     }
     
-    private struct PostRequest: ServiceRequestProtocol {
+	private struct PostRequest: ServiceRequestProtocol {
         let urlHost: String = Constants.baseURL
         let urlPath: String = "/posts"
         let httpMethod: HTTPMethod = .post
-        let parameters: RequestParameters? = .json(PostParams(userId: 1))
+		let body: RequestBody? = .json(PostParams(userId: Constants.userId))
+    }
+	
+	private struct PostWithQueryRequest: ServiceRequestProtocol {
+        let urlHost: String = Constants.baseURL
+        let urlPath: String = "/posts"
+        let httpMethod: HTTPMethod = .post
+        let body: RequestBody? = .json(PostParams(userId: Constants.userId))
+		var urlParameters: [String : String]? {
+			["userId":"\(Constants.userId)"]
+		}
     }
 	
 	struct GetRequest: ServiceRequestProtocol {
 		let urlHost: String = "jsonplaceholder.typicode.com"
 		let urlPath: String = "/posts"
-		var parameters: RequestParameters? {
-		  return .urlEncoded(["userId":"\(userId)"])
+		var urlParameters: [String : String]? {
+		  ["userId":"\(Constants.userId)"]
 		}
 		let userId: Int
 	}
@@ -31,6 +41,8 @@ final class RequestBuilderTests: XCTestCase {
     func testGetRequest() {
         let request = GetRequest(userId: Constants.userId).request
         XCTAssertEqual(request.url, URL(string: "https://jsonplaceholder.typicode.com/posts?userId=\(Constants.userId)"))
+		XCTAssertEqual(request.httpMethod, "GET")
+		XCTAssertNil(request.httpBody)
     }
     
     func testGetCurl() {
@@ -39,10 +51,19 @@ final class RequestBuilderTests: XCTestCase {
     }
     
     func testPostRequest() {
-        let request = PostRequest().request
-        XCTAssertEqual(request.url, URL(string: "https://jsonplaceholder.typicode.com/posts"))
+        let request = PostWithQueryRequest().request
+        XCTAssertEqual(request.url, URL(string: "https://jsonplaceholder.typicode.com/posts?userId=\(Constants.userId)"))
+		XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertEqual(request.httpBody, PostParams(userId: Constants.userId).encoded)
     }
+	
+    func testPostWithQueryRequest() {
+        let request = PostRequest().request
+        XCTAssertEqual(request.url, URL(string: "https://jsonplaceholder.typicode.com/posts"))
+		XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertEqual(request.httpBody, PostParams(userId: Constants.userId).encoded)
+    }
+    
     
     func testPostCurl() {
         let request = PostRequest()
