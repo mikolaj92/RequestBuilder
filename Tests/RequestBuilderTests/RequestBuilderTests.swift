@@ -77,6 +77,7 @@ final class RequestBuilderTests: XCTestCase {
         ("testGetRequest", testGetRequest),
 		("testGetCurl", testGetCurl),
 		("testPostRequest", testPostRequest),
+        ("testPostWithQueryRequest", testPostWithQueryRequest),
 		("testPostCurl", testPostCurl),
     ]
 }
